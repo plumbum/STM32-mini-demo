@@ -83,21 +83,27 @@
  * PA0  - Normal input      (BUTTON).
  * PA2  - Alternate output  (USART2 TX).
  * PA3  - Normal input      (USART2 RX).
+ * PA5  - SPI1 SCK
+ * PA6  - SPI1 MISO
+ * PA7  - SPI1 MOSI
  * PA9  - Alternate output  (USART1 TX).
  * PA10 - Normal input      (USART1 RX).
  */
-#define VAL_GPIOACRL            0x88888888      /*  PA7...PA0 */
+#define VAL_GPIOACRL            0xB8B88888      /*  PA7...PA0 */
 #define VAL_GPIOACRH            0x888888B8      /* PA15...PA8 */
 #define VAL_GPIOAODR            0xFFFFFFFF
 
 /*
  * Port B setup.
  * Everything input with pull-up except:
+ * PB5  - LED
+ * PB6  - Touch 7846 INT
+ * PB7  - SPI1 CS3 (touch)
  * PB13 - Alternate output  (MMC SPI2 SCK).
  * PB14 - Normal input      (MMC SPI2 MISO).
  * PB15 - Alternate output  (MMC SPI2 MOSI).
  */
-#define VAL_GPIOBCRL            0x88388888      /*  PB7...PB0 */
+#define VAL_GPIOBCRL            0x38388888      /*  PB7...PB0 */
 #define VAL_GPIOBCRH            0x88888888      /* PB15...PB8 */
 #define VAL_GPIOBODR            0xFFFFFFFF
 

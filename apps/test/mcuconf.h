@@ -99,7 +99,7 @@
  * SPI driver system settings.
  */
 #define USE_STM32_SPI1              TRUE
-#define USE_STM32_SPI2              TRUE
+#define USE_STM32_SPI2              FALSE
 #define STM32_SPI1_DMA_PRIORITY     2
 #define STM32_SPI2_DMA_PRIORITY     2
 #define STM32_SPI1_IRQ_PRIORITY     10

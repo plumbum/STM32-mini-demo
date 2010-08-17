@@ -2,6 +2,7 @@
 #include <hal.h>
 
 #include "terminal.h"
+#include "touch.h"
 
 /*
  * Blue LED blinker thread, times are in milliseconds.
@@ -25,17 +26,27 @@ unsigned int tParse(const char* ibuf, int lbuf, char** errorMsg)
     (void)ibuf;
     (void)lbuf;
     *errorMsg = 0;
+
+    int x, y;
+    touchGetXY(&x, &y);
+
+    tPuts("--- Touch (");
+    tPutHex(x, 4);
+    tPuts(",");
+    tPutHex(y, 4);
+    tPuts(")" EOLN);
+
     return 200;
 }
 
-int main(int argc, char **argv) {
-
+int main(int argc, char** argv)
+{
     (void)argc;
     (void)argv;
 
-    tInit(1);
-
     chThdCreateStatic(waThdLed, sizeof(waThdLed), NORMALPRIO, ThdLed, NULL);
+    touchInit();
+    tInit(1);
 
     for (;;)
     {
@@ -47,3 +58,4 @@ int main(int argc, char **argv) {
     }
     return 0;
 }
+
