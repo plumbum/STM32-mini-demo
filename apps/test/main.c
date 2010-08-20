@@ -4,6 +4,8 @@
 #include "terminal.h"
 #include "touch.h"
 
+#include "display_hw_routine.h"
+
 /*
  * Blue LED blinker thread, times are in milliseconds.
  */
@@ -47,6 +49,12 @@ int main(int argc, char** argv)
     chThdCreateStatic(waThdLed, sizeof(waThdLed), NORMALPRIO, ThdLed, NULL);
     touchInit();
     tInit(1);
+
+    dispInit();
+    int st = dispGetStatus();
+    tPuts("--- Disp status: ");
+    tPutHex(st, 4);
+    tPuts(EOLN);
 
     for (;;)
     {

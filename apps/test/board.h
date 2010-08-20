@@ -124,17 +124,19 @@
  * Everything input with pull-up except:
  * PD0  - Normal input (XTAL).
  * PD1  - Normal input (XTAL).
+ * PD13 - Light PWM
  */
-#define VAL_GPIODCRL            0x88888888      /*  PD7...PD0 */
-#define VAL_GPIODCRH            0x88888888      /* PD15...PD8 */
+#define VAL_GPIODCRL            0xb8bb88bb      /*  PD7...PD0 */
+#define VAL_GPIODCRH            0xbb38bbbb      /* PD15...PD8 */
 #define VAL_GPIODODR            0xFFFFFFFF
 
 /*
  * Port E setup.
  * Everything input with pull-up except:
+ * PE1 - LCD nrst
  */
-#define VAL_GPIOECRL            0x88888888      /*  PE7...PE0 */
-#define VAL_GPIOECRH            0x88888888      /* PE15...PE8 */
+#define VAL_GPIOECRL            0xb8888838      /*  PE7...PE0 */
+#define VAL_GPIOECRH            0xbbbbbbbb      /* PE15...PE8 */
 #define VAL_GPIOEODR            0xFFFFFFFF
 
 /*
