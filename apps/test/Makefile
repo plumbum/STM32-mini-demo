@@ -88,7 +88,6 @@ CSRC = $(PORTSRC) \
 	   board.c \
 	   terminal.c \
 	   touch.c \
-	   display.c display_hw_routine.c \
        main.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
