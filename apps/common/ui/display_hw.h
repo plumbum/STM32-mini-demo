@@ -14,8 +14,8 @@ typedef int16_t display_coord_t;
 
 #define DISPLAY_LEFT    0
 #define DISPLAY_TOP     0
-#define DISPLAY_WIDTH   320
-#define DISPLAY_HEIGHT  240
+#define DISPLAY_WIDTH   240
+#define DISPLAY_HEIGHT  320
 
 #define displayGetRgbColor(r, g, b) ((display_color_t)((((r)&0xF8)<<8) | (((g)&0xFC)<<3) | (b>>3)))
 

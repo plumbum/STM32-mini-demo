@@ -125,10 +125,12 @@ void dispLine(display_coord_t x1, display_coord_t y1, display_coord_t x2, displa
         for(x=x1; x<=x2; x++)
         {
             dispPixel(x, y, color);
-            if(2*(e+dy) >= dx)
+            e += dy;
+            if(2*e >= dx)
+            {
                 y += sy;
-            else
-                e = e+dy;
+                e -= dx;
+            }
         }
     }
     else // Vertical longest
@@ -146,10 +148,12 @@ void dispLine(display_coord_t x1, display_coord_t y1, display_coord_t x2, displa
         for(y=y1; y<=y2; y++)
         {
             dispPixel(x, y, color);
-            if(2*(e+dx) >= dy)
+            e += dx;
+            if(2*e >= dy)
+            {
                 x += sx;
-            else
-                e = e+dx;
+                e -= dy;
+            }
         }
     }
 }

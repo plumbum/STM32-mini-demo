@@ -50,13 +50,20 @@ int main(int argc, char** argv)
     touchInit();
     tInit(1);
 
-    dispInit();
+    displayInit();
     /*
     int st = dispGetStatus();
     tPuts("--- Disp status: ");
     tPutHex(st, 4);
     tPuts(EOLN);
     */
+
+    int y;
+    for(y=0; y<160; y+=5)
+    {
+        displayLine(240, 160-y, y*4/3, 160);
+        displayLine(240, 160+y, y*4/3, 160);
+    }
 
     for (;;)
     {
