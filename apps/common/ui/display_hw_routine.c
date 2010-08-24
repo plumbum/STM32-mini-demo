@@ -3,10 +3,12 @@
 #include <ch.h>
 #include <hal.h>
 #include <inttypes.h>
+#include <stdlib.h>
 
 static void _mcuInit(void);
 
 static uint16_t _lcdReadStatus(void);
+static void _lcdWriteCmd(uint16_t cmd);
 
 static uint16_t _lcdReadData(void);
 static void _lcdWriteData(uint16_t data);
@@ -14,6 +16,170 @@ static void _lcdWriteData(uint16_t data);
 static void _lcdWriteReg(uint16_t reg, uint16_t data);
 static uint16_t _lcdReadReg(uint16_t reg);
 
+static void dispInitILI9325(void);
+
+display_state_t dispInit(void)
+{
+    GPIOE->BSRR = (1<<1); // PE1
+    chThdSleepMilliseconds(10);
+    GPIOE->BRR = (1<<1); // reset PE1
+    _mcuInit();
+    chThdSleepMilliseconds(50);
+    GPIOE->BSRR = (1<<1); // PE1
+    chThdSleepMilliseconds(50);
+
+    int deviceCode = _lcdReadReg(0);
+
+    if((deviceCode == 0xFFFF) || (deviceCode == 0x0000))
+        return dsNoDevice;
+
+    if((deviceCode == 0x9325) || (deviceCode == 0x9328)) /* ILI9325 */
+    {
+        dispInitILI9325();
+    }
+    else
+        return dsUnknowDevice;
+
+    return dsOk;
+}
+
+void dispBox(display_coord_t x1, display_coord_t y1, display_coord_t x2, display_coord_t y2,
+        display_color_t color)
+{
+    display_coord_t x, y;
+    _lcdWriteReg(0x50, x1); // Horizontal frame bounds
+    _lcdWriteReg(0x51, x2);
+    _lcdWriteReg(0x52, y1); // Vertical frame bounds
+    _lcdWriteReg(0x53, y2);
+    _lcdWriteReg(0x20, x1); // Cursor
+    _lcdWriteReg(0x21, y1);
+    _lcdWriteCmd(0x22); // Write datas
+    for(y=y1; y<=y2; y++)
+        for(x=x1; x<=x2; x++)
+            _lcdWriteData(color);
+}
+
+void dispFillRect(display_coord_t x1, display_coord_t y1, display_coord_t x2, display_coord_t y2,
+        display_coord_t border, display_color_t rect_color, display_color_t fill_color)
+{
+    display_coord_t x, y;
+    _lcdWriteReg(0x50, x1); // Horizontal frame bounds
+    _lcdWriteReg(0x51, x2);
+    _lcdWriteReg(0x52, y1); // Vertical frame bounds
+    _lcdWriteReg(0x53, y2);
+    _lcdWriteReg(0x20, x1); // Cursor
+    _lcdWriteReg(0x21, y1);
+    _lcdWriteCmd(0x22); // Write datas
+    for(y=y1; y<=y2; y++)
+        for(x=x1; x<=x2; x++)
+        {
+            if((x<(x1+border)) ||
+               (x>(x2-border)) ||
+               (y<(y1+border)) ||
+               (y>(y2-border)))
+                _lcdWriteData(rect_color);
+            else
+                _lcdWriteData(fill_color);
+        }
+}
+
+void dispPixel(display_coord_t x, display_coord_t y, display_color_t color)
+{
+    _lcdWriteReg(0x20, x); // Cursor
+    _lcdWriteReg(0x21, y);
+    _lcdWriteReg(0x22, color); // Write data
+}
+
+void dispLine(display_coord_t x1, display_coord_t y1, display_coord_t x2, display_coord_t y2,
+        display_color_t color)
+{
+    display_coord_t dx, dy;
+    dx = abs(x2-x1);
+    dy = abs(y2-y1);
+    if((dx == 0) && (dy == 0)) // Point
+        dispPixel(x1, y1, color);
+    else if(dy == 0) // Horizontal
+    {
+        display_coord_t x;
+        for(x=x1; x<=x2; x++)
+            dispPixel(x, y1, color);
+    }
+    else if(dx == 0) // Vertical
+    {
+        display_coord_t y;
+        for(y=y1; y<=y2; y++)
+            dispPixel(x1, y, color); // TODO Optimize it!
+    }
+    else if(dy < dx) // Horizontal longest
+    {
+        if(x2 < x1)
+        { // Swap coordinates
+            display_coord_t t;
+            t = x1; x1 = x2; x2 = t;
+            t = y1; y1 = y2; y2 = t;
+        }
+        display_coord_t x, y, sy;
+        if(y1 < y2) sy = 1; else sy = -1;
+        display_coord_t e = 0;
+        y = y1;
+        for(x=x1; x<=x2; x++)
+        {
+            dispPixel(x, y, color);
+            if(2*(e+dy) >= dx)
+                y += sy;
+            else
+                e = e+dy;
+        }
+    }
+    else // Vertical longest
+    {
+        if(y2 < y1)
+        { // Swap coordinates
+            display_coord_t t;
+            t = x1; x1 = x2; x2 = t;
+            t = y1; y1 = y2; y2 = t;
+        }
+        display_coord_t x, y, sx;
+        if(x1 < x2) sx = 1; else sx = -1;
+        display_coord_t e = 0;
+        x = x1;
+        for(y=y1; y<=y2; y++)
+        {
+            dispPixel(x, y, color);
+            if(2*(e+dx) >= dy)
+                x += sx;
+            else
+                e = e+dx;
+        }
+    }
+}
+
+/*
+ * Internal routines
+ */
+inline static void _mcuInit()
+{
+    RCC->AHBENR |= RCC_AHBENR_FSMCEN;
+    //FSMC_Bank1->BTCR[0] = 0;
+    //FSMC_Bank1E->BWTR[0] = 0;
+
+    // Register clear
+    // Bank1 have NE1 ~ 4, each has a BCR + TCR, so a total of eight registers.
+    // Here we use the NE2, also corresponds to BTCR [6], [7].
+    FSMC_Bank1->BTCR[2] = 0x00000000;
+    FSMC_Bank1->BTCR[3] = 0x00000000;
+    FSMC_Bank1E->BWTR[2] = 0x00000000;
+    // Register to use asynchronous mode of operation of BCR
+    FSMC_Bank1->BTCR[2] |= FSMC_BCR1_WREN; // memory write enable
+    FSMC_Bank1->BTCR[2] |= FSMC_BCR1_MWID_0; // memory data width is 16bit
+    // Operation BTR register
+    FSMC_Bank1->BTCR[3] |= 1<<9; // data retention time for 3 HCLK
+    // Flash Write Timing Register
+    FSMC_Bank1E->BWTR[2] = 0x0FFFFFFF; // default values
+    // Enable BANK4 (PC card Device)
+    FSMC_Bank1->BTCR[2] |= FSMC_BCR1_MBKEN;
+
+}
 
 static void dispInitILI9325(void)
 {
@@ -85,68 +251,17 @@ static void dispInitILI9325(void)
 	_lcdWriteReg(0x0007, 0x0133); // 262K color and display ON
 }
 
-display_state_t dispInit(void)
-{
-    GPIOE->BSRR = (1<<1); // PE1
-    chThdSleepMilliseconds(10);
-    GPIOE->BRR = (1<<1); // reset PE1
-    _mcuInit();
-    chThdSleepMilliseconds(50);
-    GPIOE->BSRR = (1<<1); // PE1
-    chThdSleepMilliseconds(50);
-
-    int deviceCode = _lcdReadReg(0);
-
-    if((deviceCode == 0xFFFF) || (deviceCode == 0x0000))
-        return dsNoDevice;
-
-    if((deviceCode == 0x9325) || (deviceCode == 0x9328)) /* ILI9325 */
-    {
-        dispInitILI9325();
-    }
-    else
-        return dsUnknowDevice;
-
-    return dsOk;
-}
-
-int dispGetStatus(void)
-{
-    return _lcdReadReg(0);
-    //return _lcdReadStatus();
-}
-
-inline static void _mcuInit()
-{
-    RCC->AHBENR |= RCC_AHBENR_FSMCEN;
-    //FSMC_Bank1->BTCR[0] = 0;
-    //FSMC_Bank1E->BWTR[0] = 0;
-
-    // Register clear
-    // Bank1 have NE1 ~ 4, each has a BCR + TCR, so a total of eight registers.
-    // Here we use the NE2, also corresponds to BTCR [6], [7].
-    FSMC_Bank1->BTCR[2] = 0x00000000;
-    FSMC_Bank1->BTCR[3] = 0x00000000;
-    FSMC_Bank1E->BWTR[2] = 0x00000000;
-    // Register to use asynchronous mode of operation of BCR
-    FSMC_Bank1->BTCR[2] |= FSMC_BCR1_WREN; // memory write enable
-    FSMC_Bank1->BTCR[2] |= FSMC_BCR1_MWID_0; // memory data width is 16bit
-    // Operation BTR register
-    FSMC_Bank1->BTCR[3] |= 1<<9; // data retention time for 3 HCLK
-    // Flash Write Timing Register
-    FSMC_Bank1E->BWTR[2] = 0x0FFFFFFF; // default values
-    // Enable BANK4 (PC card Device)
-    FSMC_Bank1->BTCR[2] |= FSMC_BCR1_MBKEN;
-
-}
-
 #define Bank1_LCD_D    ((uint32_t)0x60020000)    //display Data ADDR
 #define Bank1_LCD_C    ((uint32_t)0x60000000)	 //display Reg ADDR
-
 
 static uint16_t _lcdReadStatus(void)
 {
     return *(__IO uint16_t *) (Bank1_LCD_C);
+}
+
+static void _lcdWriteCmd(uint16_t cmd)
+{
+    *(__IO uint16_t *) (Bank1_LCD_C) = cmd;	
 }
 
 static uint16_t _lcdReadData(void)

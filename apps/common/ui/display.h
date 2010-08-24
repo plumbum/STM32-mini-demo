@@ -20,12 +20,23 @@ display_state_t displayInit(void);
 void displayOn(void);
 void displayOff(void);
 
-void displayClear(display_color_t color);
+void displaySetPenColor(display_coord_t color);
+display_coord_t displayGetPenColor(void);
+void displaySetCanvasColor(display_coord_t color);
+display_coord_t displayGetCanvasColor(void);
 
-void displayBox(
-    display_coord_t x1, display_coord_t y1, 
-    display_coord_t x2, display_coord_t y2, display_color_t color);
+void displayClear(void);
 
+void displayBox(display_coord_t x1, display_coord_t y1, 
+                display_coord_t x2, display_coord_t y2);
+
+void displayFillRect(display_coord_t x1, display_coord_t y1, 
+                     display_coord_t x2, display_coord_t y2, display_coord_t border);
+
+void displayPlot(display_coord_t x, display_coord_t y);
+
+void displayLine(display_coord_t x1, display_coord_t y1, 
+                 display_coord_t x2, display_coord_t y2);
 
 #endif /* _DISPLAY_H_ */
 

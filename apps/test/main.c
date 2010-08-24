@@ -51,10 +51,12 @@ int main(int argc, char** argv)
     tInit(1);
 
     dispInit();
+    /*
     int st = dispGetStatus();
     tPuts("--- Disp status: ");
     tPutHex(st, 4);
     tPuts(EOLN);
+    */
 
     for (;;)
     {
