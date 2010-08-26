@@ -5,6 +5,13 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
+typedef enum {
+    ang0 = 0,
+    ang90,
+    ang180,
+    ang270,
+} display_rotate_t;
+
 static void _mcuInit(void);
 
 static uint16_t _lcdReadStatus(void);
@@ -43,16 +50,55 @@ display_state_t dispInit(void)
     return dsOk;
 }
 
+#define REG03 0x1000
+#define AM (1<<3)
+#define ID0 (1<<4)
+#define ID1 (1<<5)
+
+void dispRotate(display_rotate_t ang)
+{
+    switch(ang)
+    {
+        default:
+            _lcdWriteReg(0x0003, REG03 | AM | ID1); // set GRAM write direction and BGR=0,262K colors,1 transfers/pixel.
+            break;
+        case ang90:
+            _lcdWriteReg(0x0003, REG03 | 0); // set GRAM write direction and BGR=0,262K colors,1 transfers/pixel.
+            break;
+        case ang180:
+            _lcdWriteReg(0x0003, REG03 | AM | ID0); // set GRAM write direction and BGR=0,262K colors,1 transfers/pixel.
+            break;
+        case ang270:
+            _lcdWriteReg(0x0003, REG03 | ID1 | ID0); // set GRAM write direction and BGR=0,262K colors,1 transfers/pixel.
+            break;
+    }
+}
+
+static void _dispSetBoundHoriz(display_coord_t x1, display_coord_t x2)
+{
+    _lcdWriteReg(0x52, x1); // Horizontal frame bounds
+    _lcdWriteReg(0x53, x2);
+}
+
+static void _dispSetBoundVert(display_coord_t y1, display_coord_t y2)
+{
+    _lcdWriteReg(0x50, y1); // Horizontal frame bounds
+    _lcdWriteReg(0x51, y2);
+}
+
+static void _dispSetCoord(display_coord_t x1, display_coord_t y1)
+{
+    _lcdWriteReg(0x21, x1); // Cursor
+    _lcdWriteReg(0x20, y1);
+}
+
 void dispBox(display_coord_t x1, display_coord_t y1, display_coord_t x2, display_coord_t y2,
         display_color_t color)
 {
     display_coord_t x, y;
-    _lcdWriteReg(0x50, x1); // Horizontal frame bounds
-    _lcdWriteReg(0x51, x2);
-    _lcdWriteReg(0x52, y1); // Vertical frame bounds
-    _lcdWriteReg(0x53, y2);
-    _lcdWriteReg(0x20, x1); // Cursor
-    _lcdWriteReg(0x21, y1);
+    _dispSetBoundHoriz(x1, x2);
+    _dispSetBoundVert(y1, y2);
+    _dispSetCoord(x1, y1);
     _lcdWriteCmd(0x22); // Write datas
     for(y=y1; y<=y2; y++)
         for(x=x1; x<=x2; x++)
@@ -63,12 +109,9 @@ void dispFillRect(display_coord_t x1, display_coord_t y1, display_coord_t x2, di
         display_coord_t border, display_color_t rect_color, display_color_t fill_color)
 {
     display_coord_t x, y;
-    _lcdWriteReg(0x50, x1); // Horizontal frame bounds
-    _lcdWriteReg(0x51, x2);
-    _lcdWriteReg(0x52, y1); // Vertical frame bounds
-    _lcdWriteReg(0x53, y2);
-    _lcdWriteReg(0x20, x1); // Cursor
-    _lcdWriteReg(0x21, y1);
+    _dispSetBoundHoriz(x1, x2);
+    _dispSetBoundVert(y1, y2);
+    _dispSetCoord(x1, y1);
     _lcdWriteCmd(0x22); // Write datas
     for(y=y1; y<=y2; y++)
         for(x=x1; x<=x2; x++)
@@ -85,8 +128,7 @@ void dispFillRect(display_coord_t x1, display_coord_t y1, display_coord_t x2, di
 
 void dispPixel(display_coord_t x, display_coord_t y, display_color_t color)
 {
-    _lcdWriteReg(0x20, x); // Cursor
-    _lcdWriteReg(0x21, y);
+    _dispSetCoord(x, y);
     _lcdWriteReg(0x22, color); // Write data
 }
 

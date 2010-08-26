@@ -15,6 +15,25 @@ typedef struct {
     int hasgraph:1;
 } display_features_t;
 
+
+#define BLACK   displayGetRgbColor(0x00, 0x00, 0x00)
+#define GRAY    displayGetRgbColor(0x99, 0x99, 0x99)
+#define SILVER  displayGetRgbColor(0xCC, 0xCC, 0xCC)
+#define WHITE   displayGetRgbColor(0xFF, 0xFF, 0xFF)
+#define MAROON  displayGetRgbColor(0x99, 0x00, 0x00)
+#define RED     displayGetRgbColor(0xFF, 0x00, 0x00)
+#define PURPLE  displayGetRgbColor(0x99, 0x00, 0x99)
+#define FUCHSIA displayGetRgbColor(0xFF, 0x00, 0xFF)
+#define GREEN   displayGetRgbColor(0x00, 0x99, 0x00)
+#define LIME    displayGetRgbColor(0x00, 0xFF, 0x00)
+#define OLIVE   displayGetRgbColor(0x99, 0x99, 0x00)
+#define YELLOW  displayGetRgbColor(0xFF, 0xFF, 0x00)
+#define NAVY    displayGetRgbColor(0x00, 0x00, 0x99)
+#define BLUE    displayGetRgbColor(0x00, 0x00, 0xFF)
+#define TEAL    displayGetRgbColor(0x00, 0x99, 0x99)
+#define AQUA    displayGetRgbColor(0x00, 0xff, 0xff)
+
+
 display_state_t displayInit(void);
 
 void displayOn(void);
