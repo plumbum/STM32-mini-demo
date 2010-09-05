@@ -5,6 +5,8 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
+#include "font5x8.h"
+
 typedef enum {
     ang0 = 0,
     ang90,
@@ -196,6 +198,31 @@ void dispLine(display_coord_t x1, display_coord_t y1, display_coord_t x2, displa
                 x += sx;
                 e -= dy;
             }
+        }
+    }
+}
+
+void dispChar(display_coord_t x, display_coord_t y, char c, display_color_t color1, display_color_t color2)
+{
+    display_coord_t yc;
+
+    _dispSetBoundHoriz(x, x+5-1);
+    _dispSetBoundVert(y, y+8-1);
+    _dispSetCoord(x, y);
+    dispRotate(4); // TODO
+    _lcdWriteCmd(0x22); // Write datas
+    char* pc = lcd_font5x8 + (uint8_t)c*5;
+    for(yc=0; yc<5; yc++)
+    {
+        uint8_t cd = *pc++;
+        uint8_t xc = 0x80;
+        while(xc != 0)
+        {
+            if(cd & xc)
+                _lcdWriteData(color1);
+            else
+                _lcdWriteData(color2);
+            xc >>= 1;
         }
     }
 }

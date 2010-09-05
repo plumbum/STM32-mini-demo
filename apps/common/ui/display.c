@@ -15,10 +15,12 @@ display_state_t displayInit(void)
 
 void displayOn(void)
 {
+    // TODO write displayOn code
 }
 
 void displayOff(void)
 {
+    // TODO write displayOff code
 }
 
 void displaySetPenColor(display_coord_t color)
@@ -69,4 +71,51 @@ void displayLine(display_coord_t x1, display_coord_t y1,
 {
     dispLine(x1, y1, x2, y2, fgcolor);
 }
+
+void displayTextXY(display_coord_t x, display_coord_t y,
+                    char* text)
+{
+}
+
+void displaySetTextPos(display_coord_t row, display_coord_t col)
+{
+}
+
+display_coord_t displayGetRow(void)
+{
+}
+
+display_coord_t displayGetCol(void)
+{
+}
+
+
+display_coord_t displayGetMaxRow(void)
+{
+}
+
+display_coord_t displayGetMaxCol(void)
+{
+}
+
+
+void displaySetFont(int fn)
+{
+}
+
+
+int displayGetFont(void)
+{
+}
+
+
+void displayPutchar(char c)
+{
+}
+
+
+void displayPuts(const char* c)
+{
+}
+
 
